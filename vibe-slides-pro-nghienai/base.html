@@ -1,0 +1,1373 @@
+<!--
+FILE MAP
+- HEAD_BRAND: font imports and NghienAI title metadata
+- CSS_TOKENS: brand colors, fonts, stage sizing, sidebar sizing
+- CSS_FRAMEWORK: deck shell, stage, navigation, controls, responsive rules
+- CSS_UTILITIES: human-made shapes, halftone patterns, typography helpers
+- SVG_FILTERS: rough-edge filters for shapes only
+- HTML_CHROME: brand logo, counter, sidebar, click zones, controls
+- SLIDE_*: one contract-bounded slide section per slide
+- JS_CONFIG: deckConfig, logo paths, runtime flags
+- JS_RUNTIME: sidebar, branding, zoom, navigation, halftone utility
+
+EDIT CONTRACTS
+- Final generated decks may be single-file, but substantial work should happen in src/sections, src/styles, and src/scripts.
+- Preserve .slide, .slide-content, data-slide-id, data-nav, data-accent, control IDs, and data-* hooks.
+- Scope deck-specific CSS to .slide--[slug] or .slide[data-slide-id="[slug]"].
+- Shared framework CSS may use existing base classes such as .stage, .chapter-nav, .controls-bar, .title, .body.
+-->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NghienAI Presentation Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* REGION: CSS_TOKENS START
+     Contract: brand tokens, font stacks, and stage dimensions only. */
+  :root {
+    --neo-pearl: #F7F5ED;
+    --deep-dark-blue: #2A3140;
+    --neon-coral: #FF623B;
+    --tangy-yellow: #FFE032;
+    --electric-violet: #8F00FF;
+    --turquoise-blue: #088B96;
+    --blue-glow: #4850ED;
+    --surface: #FFFDF7;
+    --surface-strong: #FFF8E8;
+    --line: rgba(42, 49, 64, 0.14);
+    --line-strong: rgba(42, 49, 64, 0.28);
+    --shadow: 0 24px 70px rgba(42, 49, 64, 0.12);
+    --title-font: 'IBM Plex Serif', serif;
+    --heading-font: 'IBM Plex Sans', sans-serif;
+    --body-font: 'IBM Plex Sans', sans-serif;
+    --mono-font: 'IBM Plex Mono', monospace;
+    --stage-w: 1600;
+    --stage-h: 900;
+    --sidebar-w: 140px;
+  }
+  /* REGION: CSS_TOKENS END */
+
+  /* REGION: CSS_FRAMEWORK START
+     Contract: shared deck chrome and layout. Keep navigation/control selectors stable. */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at top left, rgba(255, 98, 59, 0.09), transparent 32%),
+      linear-gradient(180deg, #f9f7f0 0%, var(--neo-pearl) 100%);
+    color: var(--deep-dark-blue);
+    font-family: var(--body-font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(42, 49, 64, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(42, 49, 64, 0.06) 1px, transparent 1px);
+    background-size: 6.2vw 6.2vw;
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  .deck-shell {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: clamp(12px, 2vw, 24px);
+  }
+
+  .stage-frame {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: min(calc(100vw - 32px), calc((100vh - 32px) * 16 / 9));
+    aspect-ratio: 16 / 9;
+    overflow: visible;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: rgba(247, 245, 237, 0.96);
+    border: 1px solid rgba(42, 49, 64, 0.09);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, transparent 0 12%, rgba(42, 49, 64, 0.05) 12% 12.1%, transparent 12.1% 24%,
+      rgba(42, 49, 64, 0.05) 24% 24.1%, transparent 24.1% 36%, rgba(42, 49, 64, 0.05) 36% 36.1%, transparent 36.1% 48%,
+      rgba(42, 49, 64, 0.05) 48% 48.1%, transparent 48.1% 60%, rgba(42, 49, 64, 0.05) 60% 60.1%, transparent 60.1% 72%,
+      rgba(42, 49, 64, 0.05) 72% 72.1%, transparent 72.1% 84%, rgba(42, 49, 64, 0.05) 84% 84.1%, transparent 84.1% 100%);
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  /* Brand bar - chỉ giữ logo */
+  .brand-bar {
+    position: absolute;
+    top: 20px;
+    left: 28px;
+    z-index: 30;
+  }
+
+  .brand-logo {
+    height: clamp(32px, 3vw, 48px);
+    width: auto;
+    object-fit: contain;
+  }
+
+  /* Slide counter ở góc trên phải */
+  .slide-counter {
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    font-family: var(--mono-font);
+    font-size: clamp(12px, 1vw, 15px);
+    color: rgba(42, 49, 64, 0.78);
+    z-index: 30;
+  }
+
+  /* Sidebar navigation */
+  .chapter-nav {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 35;
+    width: var(--sidebar-w);
+  }
+
+  .chapter-nav::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 10px;
+    bottom: 10px;
+    width: 1px;
+    background: rgba(42, 49, 64, 0.18);
+  }
+
+  .chapter-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border: 0;
+    padding: 4px 0;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+    width: 100%;
+  }
+
+  .chapter-dot {
+    width: 15px;
+    height: 15px;
+    display: inline-grid;
+    place-items: center;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+
+  .chapter-dot::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(42, 49, 64, 0.42);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+
+  .chapter-item.active .chapter-dot::before {
+    transform: scale(1.6);
+    background: var(--chapter-accent, var(--neon-coral));
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--chapter-accent, var(--neon-coral)) 16%, transparent);
+  }
+
+  .chapter-label {
+    font-family: var(--mono-font);
+    font-size: clamp(10px, 0.8vw, 12px);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(42, 49, 64, 0.48);
+    transition: color 0.2s ease, transform 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(var(--sidebar-w) - 30px);
+  }
+
+  .chapter-item.active .chapter-label {
+    color: var(--chapter-accent, var(--neon-coral));
+    transform: translateX(2px);
+  }
+
+  /* Slides container */
+  .slides {
+    position: absolute;
+    inset: 0;
+    padding-left: var(--sidebar-w);
+  }
+
+  /* Individual slide */
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 80px 80px 80px calc(var(--sidebar-w) + 40px);
+    display: grid;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+  }
+
+  .slide.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* Click zones for navigation */
+  .click-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 15%;
+    z-index: 20;
+    cursor: pointer;
+  }
+
+  .click-zone.prev {
+    left: var(--sidebar-w);
+  }
+
+  .click-zone.next {
+    right: 0;
+  }
+
+  .slide.align-center .slide-inner {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .slide.align-center .kicker,
+  .slide.align-center .body,
+  .slide.align-center .meta-row {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .slide-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 22px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .slide.split .slide-inner {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 44px;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  /* REGION: CSS_FRAMEWORK END */
+
+  /* REGION: CSS_UTILITIES START
+     Contract: shared shape, halftone, typography, and metric utilities. Deck-specific CSS belongs in namespaced slide files. */
+
+  /* ===== HUMAN-MADE SHAPES - CHỈ VIỀN, KHÔNG FILTER TEXT ===== */
+
+  /* Container cho shape với rough edge */
+  .human-shape-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  /* Pseudo-element cho viền rough - không ảnh hưởng đến content */
+  .human-shape-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    background: var(--neon-coral);
+    filter: url(#roughFilter);
+    z-index: -1;
+  }
+
+  /* Box với viền rough */
+  .human-box {
+    position: relative;
+    background: var(--neon-coral);
+    color: #fff;
+    padding: 28px 32px;
+    box-shadow: 0 18px 44px rgba(255, 98, 59, 0.16);
+  }
+
+  /* Viền ngoài cho box */
+  .human-box::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: var(--neon-coral);
+    filter: url(#roughFilter);
+    z-index: -1;
+  }
+
+  /* Viền trong cho box */
+  .human-box::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    filter: url(#roughFilterLight);
+  }
+
+  /* Box outline style */
+  .human-box.is-outline {
+    background: rgba(255, 98, 59, 0.08);
+    color: var(--deep-dark-blue);
+  }
+
+  .human-box.is-outline::before {
+    background: transparent;
+    border: 2px solid var(--neon-coral);
+    inset: -2px;
+  }
+
+  /* Circle với viền rough */
+  .human-circle-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100px;
+    height: 100px;
+  }
+
+  .human-circle-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    background: var(--neon-coral);
+    border-radius: 50%;
+    filter: url(#roughFilter);
+    z-index: -1;
+  }
+
+  .human-circle {
+    width: 100%;
+    height: 100%;
+    background: var(--neon-coral);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Triangle - dùng SVG thay vì clip-path để có viền rough */
+  .human-triangle-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 120px;
+    height: 104px;
+  }
+
+  .human-triangle-wrapper svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    filter: url(#roughFilter);
+  }
+
+  /* Star - dùng SVG */
+  .human-star-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100px;
+    height: 100px;
+  }
+
+  .human-star-wrapper svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    filter: url(#roughFilter);
+  }
+
+  /* Organic chip/tag */
+  .organic-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 10px 16px;
+    font-family: var(--mono-font);
+    font-size: clamp(12px, 0.9vw, 15px);
+    background: var(--neon-coral);
+    color: #fff;
+  }
+
+  .organic-chip::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: var(--neon-coral);
+    filter: url(#roughFilter);
+    z-index: -1;
+  }
+
+  /* ===== HALFTONE PATTERNS ===== */
+  .halftone-panel,
+  .halftone-band,
+  .halftone-bg {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .halftone-panel::before,
+  .halftone-band::before,
+  .halftone-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, var(--deep-dark-blue) 0 1px, transparent 1.5px);
+    background-size: 6px 6px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .halftone-human::before {
+    background-image:
+      radial-gradient(circle at 20% 30%, var(--deep-dark-blue) 0 1.2px, transparent 1.5px),
+      radial-gradient(circle at 50% 50%, var(--deep-dark-blue) 0 0.8px, transparent 1.1px),
+      radial-gradient(circle at 80% 70%, var(--deep-dark-blue) 0 1.5px, transparent 1.8px);
+    background-size: 8px 8px, 12px 12px, 10px 10px;
+    opacity: 0.35;
+  }
+
+  .halftone-gradient {
+    background: linear-gradient(135deg, transparent 0%, rgba(42, 49, 64, 0.05) 100%);
+  }
+
+  .halftone-gradient::before {
+    background-image: radial-gradient(circle, var(--deep-dark-blue) 0 1px, transparent 1.5px);
+    background-size: 5px 5px;
+    mask-image: radial-gradient(ellipse at center, transparent 0%, black 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, transparent 0%, black 70%);
+    opacity: 0.5;
+  }
+
+  .halftone-stepped {
+    clip-path: polygon(
+      0 0, 20% 0, 20% 20%, 40% 20%, 40% 40%, 60% 40%, 60% 60%, 80% 60%, 80% 80%, 100% 80%, 100% 100%, 0 100%
+    );
+  }
+
+  .halftone-stepped::before {
+    background-image: radial-gradient(circle, var(--deep-dark-blue) 0 1.5px, transparent 2px);
+    background-size: 4px 4px;
+    opacity: 0.6;
+  }
+
+  .halftone-brick::before {
+    background-image: radial-gradient(circle, var(--deep-dark-blue) 0 1px, transparent 1.5px);
+    background-size: 8px 8px;
+    background-position: 0 0, 4px 4px;
+    opacity: 0.4;
+  }
+
+  .halftone-panel {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(247, 245, 237, 0.16));
+    clip-path: polygon(0 0, 100% 0, 100% 14%, 92% 14%, 92% 28%, 84% 28%, 84% 42%, 74% 42%, 74% 56%, 66% 56%, 66% 72%, 56% 72%, 56% 86%, 46% 86%, 46% 100%, 0 100%);
+  }
+
+  .halftone-band {
+    min-height: 76px;
+    background: rgba(42, 49, 64, 0.04);
+  }
+
+  .halftone-image {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .halftone-image img,
+  .halftone-image canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%) contrast(1.2);
+  }
+
+  .halftone-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, var(--deep-dark-blue) 0 1.5px, transparent 2px);
+    background-size: 5px 5px;
+    mix-blend-mode: multiply;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .accent-block {
+    background: var(--neon-coral);
+    color: #fff;
+    padding: 28px 32px;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .accent-block::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 8px;
+    background: var(--deep-dark-blue);
+    opacity: 0.15;
+  }
+
+  /* ===== TYPOGRAPHY SYSTEM ===== */
+  .title {
+    font-family: var(--title-font);
+    font-size: clamp(36px, 4vw, 72px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    font-weight: 600;
+    max-width: 12ch;
+    text-wrap: balance;
+  }
+
+  .title strong {
+    color: var(--neon-coral);
+    font-weight: 700;
+  }
+
+  .title.measure-wide {
+    max-width: 15ch;
+  }
+
+  h1, .h1 {
+    font-family: var(--heading-font);
+    font-size: clamp(32px, 3.5vw, 56px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+  }
+
+  h2, .h2 {
+    font-family: var(--heading-font);
+    font-size: clamp(26px, 2.6vw, 44px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  h3, .h3 {
+    font-family: var(--heading-font);
+    font-size: clamp(22px, 2vw, 32px);
+    line-height: 1.2;
+    font-weight: 600;
+  }
+
+  .kicker {
+    font-family: var(--mono-font);
+    font-size: clamp(12px, 0.95vw, 15px);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--neon-coral);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .kicker::before {
+    content: '';
+    width: 36px;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.65;
+  }
+
+  .body {
+    max-width: 50ch;
+    font-size: clamp(15px, 1.35vw, 20px);
+    line-height: 1.55;
+    color: rgba(42, 49, 64, 0.82);
+    text-wrap: pretty;
+  }
+
+  .body strong {
+    color: var(--deep-dark-blue);
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+  }
+
+  .tag {
+    font-family: var(--mono-font);
+    font-size: clamp(11px, 0.85vw, 14px);
+    line-height: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--line-strong);
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .tag.dark {
+    background: var(--deep-dark-blue);
+    color: var(--neo-pearl);
+    border-color: transparent;
+  }
+
+  .metric {
+    display: grid;
+    gap: 6px;
+    padding: 18px 20px;
+    background: rgba(255, 255, 255, 0.68);
+    border: 1px solid var(--line);
+  }
+
+  .metric-value {
+    font-family: var(--heading-font);
+    font-size: clamp(40px, 4.5vw, 90px);
+    line-height: 0.95;
+    color: var(--neon-coral);
+    letter-spacing: -0.05em;
+    font-weight: 700;
+  }
+
+  .metric-label {
+    font-family: var(--heading-font);
+    font-size: clamp(20px, 1.8vw, 36px);
+    line-height: 1;
+    color: var(--deep-dark-blue);
+    font-weight: 600;
+  }
+
+  .metric-note {
+    font-family: var(--mono-font);
+    font-size: clamp(11px, 0.9vw, 14px);
+    color: rgba(42, 49, 64, 0.72);
+  }
+
+  /* ===== CONTROLS - GÓC DƯỚI PHẢI ===== */
+  .controls-bar {
+    position: absolute;
+    right: 24px;
+    bottom: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 40;
+    background: rgba(247, 245, 237, 0.9);
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+
+  .nav-button {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line-strong);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--deep-dark-blue);
+    font-family: var(--mono-font);
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-button:hover {
+    background: #fff;
+    border-color: rgba(255, 98, 59, 0.45);
+    transform: translateY(-1px);
+  }
+
+  .nav-button:disabled {
+    cursor: default;
+    opacity: 0.4;
+    transform: none;
+  }
+
+  .zoom-label {
+    min-width: 50px;
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  .nav-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--line);
+    margin: 0 4px;
+  }
+
+  /* Reveal animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  .slide.active .reveal.r1 { animation: rise 0.5s 0.08s ease forwards; }
+  .slide.active .reveal.r2 { animation: rise 0.5s 0.18s ease forwards; }
+  .slide.active .reveal.r3 { animation: rise 0.5s 0.3s ease forwards; }
+  .slide.active .reveal.r4 { animation: rise 0.5s 0.42s ease forwards; }
+
+  @keyframes rise {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ===== ZOOM SYSTEM - Scale nội dung với giới hạn ===== */
+  .slide-content {
+    width: 100%;
+    height: 100%;
+    transform: scale(var(--slide-zoom, 1));
+    transform-origin: center center;
+    transition: transform 0.2s ease;
+    /* Giới hạn để không tràn ra ngoài */
+    max-width: calc(100% / var(--slide-zoom, 1));
+    max-height: calc(100% / var(--slide-zoom, 1));
+    margin: auto;
+  }
+  /* REGION: CSS_UTILITIES END */
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    :root {
+      --sidebar-w: 120px;
+    }
+
+    .slide {
+      padding: 70px 60px 70px calc(var(--sidebar-w) + 30px);
+    }
+
+    .chapter-label {
+      max-width: 80px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    :root {
+      --sidebar-w: 100px;
+    }
+
+    .slide {
+      padding: 60px 40px 60px calc(var(--sidebar-w) + 20px);
+    }
+
+    .slide.split .slide-inner {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .title,
+    .title.measure-wide {
+      max-width: 100%;
+    }
+
+    .chapter-label {
+      font-size: 9px;
+      max-width: 70px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .deck-shell {
+      padding: 8px;
+    }
+
+    .stage-frame {
+      width: min(calc(100vw - 16px), calc((100vh - 16px) * 16 / 9));
+    }
+
+    :root {
+      --sidebar-w: 36px;
+    }
+
+    .brand-bar {
+      top: 12px;
+      left: 16px;
+    }
+
+    .brand-logo {
+      height: 28px;
+    }
+
+    .slide-counter {
+      top: 14px;
+      right: 16px;
+      font-size: 11px;
+    }
+
+    .slide {
+      padding: 60px 16px 70px calc(var(--sidebar-w) + 12px);
+    }
+
+    .chapter-nav {
+      left: 8px;
+    }
+
+    .chapter-label {
+      display: none;
+    }
+
+    .controls-bar {
+      right: 12px;
+      bottom: 12px;
+      padding: 6px 8px;
+      gap: 8px;
+    }
+
+    .nav-button {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .click-zone {
+      width: 12%;
+    }
+  }
+</style>
+</head>
+<body>
+<!-- REGION: SVG_FILTERS START
+Contract: rough-edge filters for shapes only; never apply these filters to text. -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <filter id="roughFilter" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" seed="5" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="roughFilterLight" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="8" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+<!-- REGION: SVG_FILTERS END -->
+
+<!-- REGION: HTML_CHROME START
+Contract: deck shell, logo, counter, sidebar, click zones, and controls. Preserve IDs used by JS_RUNTIME. -->
+<div class="deck-shell">
+  <div class="stage-frame" id="stageFrame">
+    <div class="stage" id="stage">
+      <!-- Logo -->
+      <div class="brand-bar">
+        <img class="brand-logo" id="brandLogo" src="./assets/NghienAI_logo_orange.svg" alt="NghienAI logo" data-inline-asset>
+      </div>
+
+      <!-- Slide counter -->
+      <div class="slide-counter" id="slideCounter">1 / 5</div>
+
+      <!-- Sidebar navigation -->
+      <nav class="chapter-nav" id="chapterNav" aria-label="Slide chapters"></nav>
+
+      <!-- Slides -->
+      <div class="slides" id="slides">
+        <!-- Click zones for navigation -->
+        <div class="click-zone prev" id="clickPrev" title="Previous slide"></div>
+        <div class="click-zone next" id="clickNext" title="Next slide"></div>
+
+        <!-- REGION: SLIDE_INTRO START
+        Contract: opening/title slide. Owns content inside data-slide-id="intro"; CSS namespace .slide--intro. -->
+        <section class="slide slide--intro align-center active" data-slide-id="intro" data-nav="Intro" data-accent="coral">
+          <div class="slide-content">
+            <div class="slide-inner">
+              <div class="kicker reveal r1">Khai Hoan</div>
+              <h1 class="title measure-wide reveal r2">AI đồng hành cùng Marketer <strong>không biết code</strong></h1>
+              <p class="body reveal r3">Hệ thống slide với human-made shapes, halftone patterns, và typography thông minh.</p>
+              <div class="meta-row reveal r4">
+                <span class="organic-chip">Human-made</span>
+                <span class="tag">Halftone</span>
+                <span class="tag dark">Smart Fonts</span>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- REGION: SLIDE_INTRO END -->
+
+        <!-- REGION: SLIDE_SHAPES START
+        Contract: human-made shape examples. Owns content inside data-slide-id="shapes"; CSS namespace .slide--shapes. -->
+        <section class="slide slide--shapes" data-slide-id="shapes" data-nav="Shapes" data-accent="blue">
+          <div class="slide-content">
+            <div class="slide-inner">
+              <div class="kicker reveal r1">Human-made Shapes</div>
+              <h2 class="h1 reveal r2">Các hình dạng với viền <strong style="color: var(--neon-coral);">thủ công</strong></h2>
+              <div class="panel reveal r3" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; align-items: start; margin-top: 20px;">
+
+                <!-- Box với wrapper -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                  <div class="human-shape-wrapper">
+                    <div class="human-box" style="width: 90px; height: 90px; display: flex; align-items: center; justify-content: center;">
+                      <span style="font-family: var(--mono-font); font-size: 14px; position: relative; z-index: 1;">BOX</span>
+                    </div>
+                  </div>
+                  <span class="tag" style="font-size: 11px; padding: 6px 10px;">.human-box</span>
+                </div>
+
+                <!-- Circle với wrapper -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                  <div class="human-circle-wrapper">
+                    <div class="human-circle"></div>
+                  </div>
+                  <span class="tag" style="font-size: 11px; padding: 6px 10px;">.human-circle</span>
+                </div>
+
+                <!-- Triangle SVG -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                  <div class="human-triangle-wrapper">
+                    <svg viewBox="0 0 120 104" preserveAspectRatio="none">
+                      <polygon points="60,0 0,104 120,104" fill="#FF623B"/>
+                    </svg>
+                  </div>
+                  <span class="tag" style="font-size: 11px; padding: 6px 10px;">.human-triangle</span>
+                </div>
+
+                <!-- Star SVG -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                  <div class="human-star-wrapper">
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                      <polygon points="50,0 61,35 98,35 68,57 79,91 50,70 21,91 32,57 2,35 39,35" fill="#FF623B"/>
+                    </svg>
+                  </div>
+                  <span class="tag" style="font-size: 11px; padding: 6px 10px;">.human-star</span>
+                </div>
+
+              </div>
+              <p class="body reveal r4" style="margin-top: 24px; text-align: center; max-width: 55ch; font-size: 15px;">
+                Viền rough edge chỉ áp dụng cho <strong>shape container</strong>, text bên trong luôn sắc nét.
+              </p>
+            </div>
+          </div>
+        </section>
+        <!-- REGION: SLIDE_SHAPES END -->
+
+        <!-- REGION: SLIDE_HALFTONE START
+        Contract: halftone pattern examples. Owns content inside data-slide-id="halftone"; CSS namespace .slide--halftone. -->
+        <section class="slide slide--halftone" data-slide-id="halftone" data-nav="Halftone" data-accent="violet">
+          <div class="slide-content">
+            <div class="slide-inner" style="justify-content: center;">
+              <div class="kicker reveal r1">Pattern System</div>
+              <h2 class="h1 reveal r2">Human-made <strong style="color: var(--neon-coral);">Halftone</strong></h2>
+              <div class="panel reveal r3" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px;">
+                <div class="halftone-panel halftone-stepped" style="min-height: 160px; display: flex; align-items: center; justify-content: center;">
+                  <span class="tag dark" style="font-size: 11px;">Stepped</span>
+                </div>
+                <div class="halftone-band halftone-brick" style="min-height: 160px; display: flex; align-items: center; justify-content: center;">
+                  <span class="tag dark" style="font-size: 11px;">Brick</span>
+                </div>
+                <div class="halftone-bg halftone-gradient" style="min-height: 160px; display: flex; align-items: center; justify-content: center;">
+                  <span class="tag dark" style="font-size: 11px;">Gradient</span>
+                </div>
+              </div>
+              <div class="meta-row reveal r4" style="justify-content: center; margin-top: 16px;">
+                <span class="organic-chip" style="font-size: 11px; padding: 8px 12px;">.halftone-stepped</span>
+                <span class="organic-chip" style="font-size: 11px; padding: 8px 12px;">.halftone-brick</span>
+                <span class="organic-chip" style="font-size: 11px; padding: 8px 12px;">.halftone-gradient</span>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- REGION: SLIDE_HALFTONE END -->
+
+        <!-- REGION: SLIDE_TYPOGRAPHY START
+        Contract: typography system examples. Owns content inside data-slide-id="typography"; CSS namespace .slide--typography. -->
+        <section class="slide slide--typography split" data-slide-id="typography" data-nav="Typography" data-accent="teal">
+          <div class="slide-content">
+            <div class="slide-inner">
+              <div class="panel">
+                <div class="kicker reveal r1">Typography</div>
+                <h2 class="h1 reveal r2">Font <strong style="color: var(--neon-coral);">thông minh</strong></h2>
+                <div class="reveal r3" style="display: flex; flex-direction: column; gap: 12px;">
+                  <div style="padding: 14px; background: rgba(255,255,255,0.5); border-left: 3px solid var(--neon-coral);">
+                    <div style="font-family: var(--title-font); font-size: 24px; font-weight: 600;">.title - Serif</div>
+                    <div style="font-size: 12px; color: rgba(42,49,64,0.6);">Chỉ dùng cho title chính</div>
+                  </div>
+                  <div style="padding: 14px; background: rgba(255,255,255,0.5); border-left: 3px solid var(--blue-glow);">
+                    <div style="font-family: var(--heading-font); font-size: 20px; font-weight: 700;">h1, h2, h3 - Sans</div>
+                    <div style="font-size: 12px; color: rgba(42,49,64,0.6);">Tất cả headings khác</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Box với wrapper để text không bị filter -->
+              <div class="human-shape-wrapper">
+                <div class="human-box" style="padding: 28px;">
+                  <div class="metric reveal r2" style="position: relative; z-index: 1;">
+                    <div class="metric-value">IBM</div>
+                    <div class="metric-label">Plex Family</div>
+                    <div class="metric-note">Serif · Sans · Mono</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+        <!-- REGION: SLIDE_TYPOGRAPHY END -->
+
+        <!-- REGION: SLIDE_IMAGES START
+        Contract: image/halftone example. Owns content inside data-slide-id="images"; CSS namespace .slide--images. -->
+        <section class="slide slide--images split" data-slide-id="images" data-nav="Images" data-accent="coral">
+          <div class="slide-content">
+            <div class="slide-inner">
+              <div class="panel">
+                <div class="kicker reveal r1">Image Processing</div>
+                <h2 class="h1 reveal r2">Convert ảnh sang <strong style="color: var(--neon-coral);">Halftone</strong></h2>
+                <p class="body reveal r3" style="font-size: 14px;">
+                  Sử dụng class <code>.halftone-image</code> để áp dụng hiệu ứng halftone lên ảnh.
+                </p>
+                <div class="meta-row reveal r4">
+                  <span class="tag" style="font-size: 11px;">PNG Support</span>
+                  <span class="tag" style="font-size: 11px;">Canvas API</span>
+                  <span class="tag dark" style="font-size: 11px;">Auto-process</span>
+                </div>
+              </div>
+              <div class="halftone-image" style="min-height: 320px; background: linear-gradient(135deg, #e0e0e0 0%, #f0f0f0 100%); display: flex; align-items: center; justify-content: center;">
+                <div style="text-align: center; color: rgba(42,49,64,0.4);">
+                  <div style="font-size: 48px; margin-bottom: 12px;">🖼️</div>
+                  <div style="font-family: var(--mono-font); font-size: 12px;">Drop image here</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- REGION: SLIDE_IMAGES END -->
+      </div>
+
+      <!-- Controls bar - góc dưới phải -->
+      <div class="controls-bar">
+        <button class="nav-button" id="zoomOutButton" aria-label="Zoom out">−</button>
+        <button class="nav-button zoom-label" id="zoomResetButton" aria-label="Reset zoom">100%</button>
+        <button class="nav-button" id="zoomInButton" aria-label="Zoom in">+</button>
+        <div class="nav-divider"></div>
+        <button class="nav-button" id="prevButton" aria-label="Slide truoc">←</button>
+        <button class="nav-button" id="nextButton" aria-label="Slide tiep theo">→</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- REGION: HTML_CHROME END -->
+
+<script>
+  // REGION: JS_CONFIG START
+  // Contract: runtime flags, branding options, and logo paths only.
+  const deckConfig = {
+    showLogo: true,
+    logoVariant: 'full-orange',
+    presenterName: 'Khai Hoan',
+    enableClickAdvance: true,
+    enableKeyboardNav: true,
+    showSlideNumbers: true,
+    enableSidebar: true,
+    enableZoomControls: true,
+    defaultZoom: 1,
+    zoomStep: 0.1,
+    minZoom: 0.7,
+    maxZoom: 1.3,
+    logos: {
+      'full-orange': './assets/NghienAI_logo_orange.svg',
+      'logomark-orange': './assets/NghienAI_logomark_orange.svg',
+      'logomark-white': './assets/NghienAI_logomark_white.svg',
+      'none': ''
+    }
+  };
+  // REGION: JS_CONFIG END
+
+  // REGION: JS_RUNTIME START
+  // Contract: navigation, sidebar, zoom, branding, and halftone runtime. Preserve public IDs and deckConfig keys.
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const slideContents = Array.from(document.querySelectorAll('.slide-content'));
+  const slideCounter = document.getElementById('slideCounter');
+  const brandLogo = document.getElementById('brandLogo');
+  const prevButton = document.getElementById('prevButton');
+  const nextButton = document.getElementById('nextButton');
+  const chapterNav = document.getElementById('chapterNav');
+  const zoomInButton = document.getElementById('zoomInButton');
+  const zoomOutButton = document.getElementById('zoomOutButton');
+  const zoomResetButton = document.getElementById('zoomResetButton');
+  const clickPrev = document.getElementById('clickPrev');
+  const clickNext = document.getElementById('clickNext');
+
+  let currentSlide = 0;
+  let currentZoom = deckConfig.defaultZoom || 1;
+
+  const accentMap = {
+    coral: '#FF623B',
+    blue: '#4850ED',
+    violet: '#8F00FF',
+    teal: '#088B96',
+    yellow: '#FFE032',
+    dark: '#2A3140'
+  };
+
+  function renderSidebar() {
+    chapterNav.innerHTML = '';
+
+    slides.forEach((slide, index) => {
+      const label = slide.dataset.nav || `Slide ${index + 1}`;
+      const accent = accentMap[slide.dataset.accent] || accentMap.coral;
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'chapter-item';
+      item.style.setProperty('--chapter-accent', accent);
+      item.setAttribute('aria-label', `Go to ${label}`);
+      item.innerHTML = `
+        <span class="chapter-dot" aria-hidden="true"></span>
+        <span class="chapter-label">${label}</span>
+      `;
+      item.addEventListener('click', (event) => {
+        event.stopPropagation();
+        goToSlide(index);
+      });
+      chapterNav.appendChild(item);
+    });
+  }
+
+  function applyBranding() {
+    if (deckConfig.showLogo && deckConfig.logoVariant !== 'none') {
+      brandLogo.src = deckConfig.logos[deckConfig.logoVariant] || deckConfig.logos['full-orange'];
+      brandLogo.style.display = '';
+    } else {
+      brandLogo.style.display = 'none';
+    }
+
+    slideCounter.style.display = deckConfig.showSlideNumbers ? '' : 'none';
+    chapterNav.style.display = deckConfig.enableSidebar ? '' : 'none';
+  }
+
+  // Zoom scale nội dung slide với giới hạn
+  function applyZoom() {
+    currentZoom = Math.max(deckConfig.minZoom, Math.min(currentZoom, deckConfig.maxZoom));
+
+    // Apply zoom to each slide content
+    slideContents.forEach(content => {
+      content.style.setProperty('--slide-zoom', currentZoom);
+    });
+
+    zoomResetButton.textContent = `${Math.round(currentZoom * 100)}%`;
+    zoomOutButton.disabled = currentZoom <= deckConfig.minZoom + 0.001;
+    zoomInButton.disabled = currentZoom >= deckConfig.maxZoom - 0.001;
+  }
+
+  function updateSlideUI() {
+    slides.forEach((slide, index) => {
+      slide.classList.toggle('active', index === currentSlide);
+    });
+
+    Array.from(chapterNav.children).forEach((item, index) => {
+      item.classList.toggle('active', index === currentSlide);
+    });
+
+    slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+    prevButton.disabled = currentSlide === 0;
+    nextButton.disabled = currentSlide === slides.length - 1;
+
+    if (clickPrev) clickPrev.style.visibility = currentSlide === 0 ? 'hidden' : 'visible';
+    if (clickNext) clickNext.style.visibility = currentSlide === slides.length - 1 ? 'hidden' : 'visible';
+  }
+
+  function goToSlide(nextIndex) {
+    const boundedIndex = Math.max(0, Math.min(nextIndex, slides.length - 1));
+    if (boundedIndex === currentSlide) return;
+    currentSlide = boundedIndex;
+    updateSlideUI();
+  }
+
+  prevButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    goToSlide(currentSlide - 1);
+  });
+
+  nextButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    goToSlide(currentSlide + 1);
+  });
+
+  zoomOutButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    currentZoom -= deckConfig.zoomStep;
+    applyZoom();
+  });
+
+  zoomInButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    currentZoom += deckConfig.zoomStep;
+    applyZoom();
+  });
+
+  zoomResetButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    currentZoom = deckConfig.defaultZoom || 1;
+    applyZoom();
+  });
+
+  if (clickPrev) {
+    clickPrev.addEventListener('click', () => {
+      if (deckConfig.enableClickAdvance) {
+        goToSlide(currentSlide - 1);
+      }
+    });
+  }
+
+  if (clickNext) {
+    clickNext.addEventListener('click', () => {
+      if (deckConfig.enableClickAdvance) {
+        goToSlide(currentSlide + 1);
+      }
+    });
+  }
+
+  document.addEventListener('keydown', (event) => {
+    if (!deckConfig.enableKeyboardNav) return;
+
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(event.key)) {
+      event.preventDefault();
+      goToSlide(currentSlide + 1);
+    }
+
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) {
+      event.preventDefault();
+      goToSlide(currentSlide - 1);
+    }
+
+    if ((event.key === '+' || event.key === '=') && !event.metaKey && !event.ctrlKey) {
+      event.preventDefault();
+      currentZoom += deckConfig.zoomStep;
+      applyZoom();
+    }
+
+    if ((event.key === '-' || event.key === '_') && !event.metaKey && !event.ctrlKey) {
+      event.preventDefault();
+      currentZoom -= deckConfig.zoomStep;
+      applyZoom();
+    }
+
+    if (event.key === '0' && !event.metaKey && !event.ctrlKey) {
+      event.preventDefault();
+      currentZoom = deckConfig.defaultZoom || 1;
+      applyZoom();
+    }
+  });
+
+  // Halftone image processing utility
+  window.halftoneImage = {
+    process: function(imageElement, options = {}) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = imageElement;
+
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+
+      ctx.drawImage(img, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        const contrasted = Math.min(255, Math.max(0, (gray - 128) * 1.2 + 128));
+        data[i] = data[i + 1] = data[i + 2] = contrasted;
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      const dotSize = options.dotSize || 4;
+      const spacing = options.spacing || 6;
+
+      ctx.fillStyle = 'rgba(42, 49, 64, 0.5)';
+      for (let y = 0; y < canvas.height; y += spacing) {
+        for (let x = 0; x < canvas.width; x += spacing) {
+          const pixel = ctx.getImageData(x, y, 1, 1).data;
+          const brightness = pixel[0] / 255;
+          const radius = (1 - brightness) * dotSize / 2;
+
+          if (radius > 0.5) {
+            ctx.beginPath();
+            ctx.arc(x + spacing/2, y + spacing/2, radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      return canvas.toDataURL('image/png');
+    },
+
+    applyToElement: function(containerSelector, imageUrl, options = {}) {
+      const container = document.querySelector(containerSelector);
+      if (!container) return;
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const dataUrl = window.halftoneImage.process(img, options);
+        const resultImg = document.createElement('img');
+        resultImg.src = dataUrl;
+        resultImg.style.width = '100%';
+        resultImg.style.height = '100%';
+        resultImg.style.objectFit = 'cover';
+        container.innerHTML = '';
+        container.appendChild(resultImg);
+      };
+      img.src = imageUrl;
+    }
+  };
+
+  renderSidebar();
+  applyBranding();
+  applyZoom();
+  updateSlideUI();
+  // REGION: JS_RUNTIME END
+</script>
+</body>
+</html>

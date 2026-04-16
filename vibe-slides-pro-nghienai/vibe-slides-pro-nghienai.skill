@@ -1,0 +1,26 @@
+{
+  "name": "vibe-slides-pro-nghienai",
+  "version": "1.0.0",
+  "description": "NghienAI-branded HTML slide decks with IBM Plex typography, responsive 16:9 stage, sidebar navigation, zoom controls, human-made orange boxes, halftone patterns, page numbers, optional SVG branding, and component-first source files that build into one final HTML.",
+  "author": "Codex",
+  "entry": "SKILL.md",
+  "template": "base.html",
+  "tags": ["presentation", "slides", "html", "nghienai", "branding", "responsive"],
+  "features": [
+    "IBM Plex Serif / Sans / Mono typography",
+    "NghienAI brand color tokens",
+    "Responsive 16:9 centered stage",
+    "Sidebar navigation",
+    "Zoom controls",
+    "Click, keyboard, and button navigation",
+    "Human-made orange box styling",
+    "Halftone pattern utilities",
+    "Page numbering",
+    "Optional presenter name and SVG logo",
+    "Component-first source workflow with section contracts",
+    "Existing single-file deck componentizer",
+    "Namespaced slide CSS and file maps",
+    "Build script for generating a single-file HTML deliverable",
+    "Single-file HTML output"
+  ]
+}

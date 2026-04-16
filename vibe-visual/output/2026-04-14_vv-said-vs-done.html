@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>VV — Said vs Done</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 20px;
+      font-family: monospace;
+    }
+    #artwork {
+      width: 540px;
+      height: 540px;
+      display: block;
+      background: #000;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+    }
+    button {
+      background: #1a1a1a;
+      color: #fff;
+      border: 1px solid #333;
+      padding: 8px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    button:hover { background: #2a2a2a; border-color: #555; }
+    .info {
+      color: #444;
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <svg id="artwork" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+    <!-- Pure black background -->
+    <rect width="1080" height="1080" fill="#000000"/>
+
+    <!-- Large circle, centered slightly above center -->
+    <circle cx="540" cy="490" r="210"
+      fill="none" stroke="#ffffff" stroke-width="1.3"/>
+
+    <!-- Tiny filled wedge: ~5% of circle = "DONE" -->
+    <!-- 5% = 18 degrees. Starting from top (270° in standard coords = 12 o'clock) -->
+    <!-- Start point: top of circle (540, 280) -->
+    <!-- End point: 18° clockwise from top -->
+    <!-- arcPoint(540, 490, 210, 18deg from top) -->
+    <!-- x = 540 + 210 * sin(18°) = 540 + 64.9 ≈ 605 -->
+    <!-- y = 490 - 210 * cos(18°) = 490 - 199.7 ≈ 290 -->
+    <path d="
+      M 540,490
+      L 540,280
+      A 210,210 0 0,1 604.9,290.3
+      Z"
+      fill="#ffffff" stroke="none"/>
+
+    <!-- Legend — bottom right of circle -->
+    <g transform="translate(660, 720)">
+      <!-- SAID: circle outline -->
+      <circle cx="6" cy="5" r="5" fill="none" stroke="#ffffff" stroke-width="1"/>
+      <text x="18" y="10" fill="#ffffff" font-family="monospace"
+        font-size="13" letter-spacing="3">SAID</text>
+
+      <!-- DONE: filled circle -->
+      <circle cx="6" cy="31" r="5" fill="#ffffff" stroke="none"/>
+      <text x="18" y="36" fill="#ffffff" font-family="monospace"
+        font-size="13" letter-spacing="3">DONE</text>
+    </g>
+
+  </svg>
+
+  <div class="controls">
+    <button onclick="downloadPNG()">DOWNLOAD  PNG</button>
+  </div>
+  <div class="info">1080 × 1080  ·  VV PATTERN 05  ·  RATIO PIE</div>
+
+  <script>
+  function downloadPNG() {
+    const svg = document.getElementById('artwork');
+    const serializer = new XMLSerializer();
+    const svgStr = serializer.serializeToString(svg);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1080;
+    const ctx = canvas.getContext('2d');
+
+    const img = new Image();
+    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    img.onload = function () {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 1080, 1080);
+      ctx.drawImage(img, 0, 0, 1080, 1080);
+      const a = document.createElement('a');
+      a.download = 'vv-said-vs-done.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+  </script>
+
+</body>
+</html>

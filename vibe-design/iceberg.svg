@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 580" fill="none">
+  <defs>
+    <!-- Above water: faint warm white -->
+    <linearGradient id="above-grad" x1="200" y1="20" x2="200" y2="178" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E8E2D8" stop-opacity="0.01"/>
+      <stop offset="100%" stop-color="#E8E2D8" stop-opacity="0.05"/>
+    </linearGradient>
+    <!-- Below water: subtle teal depth -->
+    <linearGradient id="below-grad" x1="200" y1="178" x2="200" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#6AABB5" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#6AABB5" stop-opacity="0.02"/>
+    </linearGradient>
+    <!-- Stroke fade for below triangle -->
+    <linearGradient id="stroke-below" x1="200" y1="178" x2="200" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#6AABB5" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#6AABB5" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ─── Water surface line (full width) ─── -->
+  <line x1="0" y1="178" x2="400" y2="178"
+        stroke="#E8E2D8" stroke-opacity="0.2" stroke-width="1"/>
+
+  <!-- ─── Above-water triangle ─── -->
+  <polygon
+    points="200,22 374,178 26,178"
+    fill="url(#above-grad)"
+    stroke="#E8E2D8"
+    stroke-opacity="0.22"
+    stroke-width="1"
+    stroke-linejoin="round"
+  />
+
+  <!-- ─── Below-water triangle ─── -->
+  <polygon
+    points="26,178 374,178 200,558"
+    fill="url(#below-grad)"
+    stroke="url(#stroke-below)"
+    stroke-width="1"
+    stroke-linejoin="round"
+  />
+</svg>
