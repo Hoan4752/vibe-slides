@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<!--
+  ICEBERG COMPONENT — vibe-slides compatible
+  ==========================================
+  Copy the <style> block + the .iceberg-wrap div into your slide HTML.
+  The SVG is inlined — no external file needed.
+
+  TEXT SLOTS:
+    .iceberg-label-above  → label bên phải phần trên mặt nước
+    .iceberg-label-below  → label bên phải phần dưới mặt nước
+    .iceberg-surface-tag  → tag "SURFACE" ở cạnh trái đường nước
+    .iceberg-items-above  → danh sách items phần trên (ít dùng)
+    .iceberg-items-below  → danh sách items phần dưới (main content)
+    .iceberg-dot-line     → dotted annotation lines (tùy chọn)
+-->
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Iceberg Component</title>
+<style>
+  /* ── Design tokens (match vibe-slides) ── */
+  :root {
+    --bg:        #0B0B0F;
+    --text:      #E8E2D8;
+    --text-dim:  #7A7580;
+    --accent-1:  #C4956A;   /* warm gold */
+    --accent-2:  #6AABB5;   /* teal */
+    --border:    #2A2830;
+    --mono:      'Azeret Mono', monospace;
+    --sans:      'Figtree', sans-serif;
+    --serif:     'Newsreader', serif;
+  }
+
+  /* ── Google Fonts ── */
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,300;0,400;1,400&family=Figtree:wght@300;400;500;600&family=Azeret+Mono:wght@300;400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px;
+  }
+
+  /* ════════════════════════════════════════
+     ICEBERG COMPONENT — copy từ đây
+     ════════════════════════════════════════ */
+  .iceberg-wrap {
+    position: relative;
+    width: 600px;     /* ← đổi width/height để resize */
+    height: 720px;
+    flex-shrink: 0;
+  }
+
+  /* SVG chiếm toàn bộ container */
+  .iceberg-wrap .iceberg-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Đường nước — tỉ lệ 30% từ trên (khớp SVG viewBox) */
+  .iceberg-waterline { top: 30.7%; }   /* 178/580 ≈ 30.7% */
+
+  /* ── Text slots ── */
+  .iceberg-label-above,
+  .iceberg-label-below,
+  .iceberg-surface-tag {
+    position: absolute;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+
+  /* Label bên phải — "WHAT AI REMEMBERS" */
+  .iceberg-label-above {
+    right: -10px;
+    top: 15%;
+    color: var(--text-dim);
+    text-align: right;
+    transform: translateX(100%);
+    padding-left: 16px;
+    white-space: nowrap;
+  }
+
+  /* Label bên phải — "WHAT ACTUALLY MATTERS" */
+  .iceberg-label-below {
+    right: -10px;
+    top: 62%;
+    color: var(--accent-1);
+    text-align: right;
+    transform: translateX(100%);
+    padding-left: 16px;
+    white-space: nowrap;
+  }
+
+  /* Tag "SURFACE" bên trái */
+  .iceberg-surface-tag {
+    left: -10px;
+    top: 30.7%;           /* khớp waterline */
+    transform: translate(-100%, -50%);
+    color: var(--text-dim);
+    padding-right: 12px;
+    white-space: nowrap;
+  }
+
+  /* ── Items list (phần nội dung chính) ── */
+  .iceberg-items-below {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    transform: translateX(-50%);
+    width: 60%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .iceberg-item {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .iceberg-item.accent {
+    color: var(--text);
+  }
+
+  /* Items phần trên (ít dùng hơn) */
+  .iceberg-items-above {
+    position: absolute;
+    left: 50%;
+    top: 14%;
+    transform: translateX(-50%);
+    width: 45%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* Dotted annotation line (bên phải) */
+  .iceberg-dot-line {
+    position: absolute;
+    right: 0;
+    height: 1px;
+    border-top: 1px dashed rgba(255,255,255,0.12);
+    pointer-events: none;
+  }
+
+  /* ── END COMPONENT ── */
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════
+     DEMO: Iceberg với text đầy đủ
+     ════════════════════════════════ -->
+<div style="display:flex; gap:80px; align-items:center; flex-wrap:wrap;">
+
+  <!-- EXAMPLE 1: Full labels + items -->
+  <div style="display:flex; flex-direction:column; gap:16px; align-items:center;">
+    <p style="font-family:var(--mono); font-size:10px; color:var(--text-dim); letter-spacing:0.1em; text-transform:uppercase;">Example 1 — Full</p>
+    <div class="iceberg-wrap">
+
+      <!-- ← SVG shape (paste inline, no external file needed) -->
+      <svg class="iceberg-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 580" fill="none">
+        <defs>
+          <linearGradient id="ag1" x1="200" y1="20" x2="200" y2="178" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#E8E2D8" stop-opacity="0.01"/>
+            <stop offset="100%" stop-color="#E8E2D8" stop-opacity="0.05"/>
+          </linearGradient>
+          <linearGradient id="bg1" x1="200" y1="178" x2="200" y2="560" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#6AABB5" stop-opacity="0.12"/>
+            <stop offset="100%" stop-color="#6AABB5" stop-opacity="0.02"/>
+          </linearGradient>
+          <linearGradient id="sg1" x1="200" y1="178" x2="200" y2="560" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#6AABB5" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#6AABB5" stop-opacity="0.08"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="178" x2="400" y2="178" stroke="#E8E2D8" stroke-opacity="0.2" stroke-width="1"/>
+        <polygon points="200,22 374,178 26,178" fill="url(#ag1)" stroke="#E8E2D8" stroke-opacity="0.22" stroke-width="1" stroke-linejoin="round"/>
+        <polygon points="26,178 374,178 200,558" fill="url(#bg1)" stroke="url(#sg1)" stroke-width="1" stroke-linejoin="round"/>
+      </svg>
+
+      <!-- Text slots -->
+      <span class="iceberg-surface-tag">Surface</span>
+      <span class="iceberg-label-above">What AI<br>Remembers</span>
+      <span class="iceberg-label-below">What Actually<br>Matters</span>
+
+      <!-- Dotted annotation lines -->
+      <div class="iceberg-dot-line" style="top:16%; width:18%;"></div>
+      <div class="iceberg-dot-line" style="top:62%; width:18%;"></div>
+
+      <!-- Above items (Name, Title, Preferences) -->
+      <div class="iceberg-items-above">
+        <span class="iceberg-item accent">Name</span>
+        <span class="iceberg-item accent">Title</span>
+        <span class="iceberg-item accent">Preferences</span>
+      </div>
+
+      <!-- Below items -->
+      <div class="iceberg-items-below">
+        <span class="iceberg-item">Client hates long emails</span>
+        <span class="iceberg-item">"Keep it tight" = under one page</span>
+        <span class="iceberg-item">Q4 numbers lag two weeks</span>
+        <span class="iceberg-item">What "good" looks like here</span>
+        <span class="iceberg-item">Your team's vocabulary</span>
+        <span class="iceberg-item">Lessons from past sessions</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- EXAMPLE 2: Minimal — shape only, no text -->
+  <div style="display:flex; flex-direction:column; gap:16px; align-items:center;">
+    <p style="font-family:var(--mono); font-size:10px; color:var(--text-dim); letter-spacing:0.1em; text-transform:uppercase;">Example 2 — Shape only</p>
+    <div class="iceberg-wrap" style="width:320px; height:440px;">
+      <svg class="iceberg-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 580" fill="none">
+        <defs>
+          <linearGradient id="ag2" x1="200" y1="20" x2="200" y2="178" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#E8E2D8" stop-opacity="0.01"/>
+            <stop offset="100%" stop-color="#E8E2D8" stop-opacity="0.05"/>
+          </linearGradient>
+          <linearGradient id="bg2" x1="200" y1="178" x2="200" y2="560" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#6AABB5" stop-opacity="0.12"/>
+            <stop offset="100%" stop-color="#6AABB5" stop-opacity="0.02"/>
+          </linearGradient>
+          <linearGradient id="sg2" x1="200" y1="178" x2="200" y2="560" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#6AABB5" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#6AABB5" stop-opacity="0.08"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="178" x2="400" y2="178" stroke="#E8E2D8" stroke-opacity="0.2" stroke-width="1"/>
+        <polygon points="200,22 374,178 26,178" fill="url(#ag2)" stroke="#E8E2D8" stroke-opacity="0.22" stroke-width="1" stroke-linejoin="round"/>
+        <polygon points="26,178 374,178 200,558" fill="url(#bg2)" stroke="url(#sg2)" stroke-width="1" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+</div>
+
+<!--
+  ════════════════════════════════════════════════════════
+  USAGE GUIDE — copy đoạn này vào slide của bạn
+  ════════════════════════════════════════════════════════
+
+  1. RESIZE: Chỉ cần đổi width/height của .iceberg-wrap
+     <div class="iceberg-wrap" style="width:500px; height:650px;">
+
+  2. ADD TEXT ABOVE WATER:
+     <div class="iceberg-items-above">
+       <span class="iceberg-item accent">Text 1</span>
+       <span class="iceberg-item accent">Text 2</span>
+     </div>
+
+  3. ADD TEXT BELOW WATER:
+     <div class="iceberg-items-below">
+       <span class="iceberg-item">Item 1</span>
+       <span class="iceberg-item">Item 2</span>
+     </div>
+
+  4. SIDE LABELS:
+     <span class="iceberg-surface-tag">SURFACE</span>
+     <span class="iceberg-label-above">WHAT AI REMEMBERS</span>
+     <span class="iceberg-label-below">WHAT ACTUALLY MATTERS</span>
+
+  5. CHANGE COLORS: Override CSS variables trên .iceberg-wrap
+     <div class="iceberg-wrap" style="--accent-2: #9B8AC4;">
+
+  6. WATERLINE RATIO: Mặc định 30.7% từ trên.
+     Đổi bằng cách edit điểm y=178 trong SVG viewBox (0 0 400 580)
+     và update .iceberg-waterline top% trong CSS.
+  ════════════════════════════════════════════════════════
+-->
+</body>
+</html>

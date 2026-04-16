@@ -1,0 +1,19 @@
+{
+  "name": "vibe-slides-pro",
+  "version": "1.0.0",
+  "description": "Professional HTML slide decks with light theme, click navigation, watermark branding, and chapter sidebar. For Khai Hoan | Nghien AI presentations.",
+  "author": "Khai Hoan",
+  "entry": "SKILL.md",
+  "template": "base.html",
+  "tags": ["presentation", "slides", "html", "light-theme", "watermark"],
+  "features": [
+    "Light theme default",
+    "Click to navigate",
+    "Button navigation",
+    "Watermark: Khai Hoan | Nghien AI",
+    "Chapter sidebar with dot-line nav",
+    "Staggered animations",
+    "SVG diagram support",
+    "Keyboard navigation"
+  ]
+}

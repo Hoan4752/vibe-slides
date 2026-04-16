@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presentation — Vibe Slides Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ═══════ Design tokens ═══════ */
+  :root {
+    --bg: #FAFAF8;
+    --bg-subtle: #F5F3EF;
+    --bg-surface: #FFFFFF;
+    --text: #1A1A1F;
+    --text-dim: #5A5560;
+    --text-muted: #8A8590;
+    --border: #E4E0D6;
+    --accent-1: #C7956D;
+    --accent-2: #6AADA7;
+    --accent-3: #B87A8A;
+    --accent-4: #8AAB72;
+    --accent-5: #C7B88A;
+    --slide-accent: var(--accent-1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle grid pattern background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(circle, var(--border) 0.5px, transparent 0.5px);
+    background-size: 32px 32px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ═══════ Slide counter + Watermark ═══════ */
+  .slide-counter {
+    position: fixed; top: 36px; right: 48px;
+    font-family: 'Fira Code', monospace; font-size: 13px;
+    color: var(--text-dim); z-index: 100; letter-spacing: 0.05em;
+  }
+  .slide-counter .watermark {
+    margin-left: 12px;
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+
+  /* ═══════ Chapter sidebar navigation ═══════ */
+  .chapter-nav {
+    position: fixed; left: 40px; top: 50%; transform: translateY(-50%);
+    z-index: 100; display: flex; flex-direction: column; align-items: flex-start;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 14px; padding: 10px 0;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-dot-wrap { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; }
+  .nav-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted);
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-item.active .nav-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .nav-item.visited .nav-dot { background: var(--text-dim); }
+  .nav-label {
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); white-space: nowrap;
+  }
+  .nav-item.active .nav-label { color: var(--accent); }
+  .nav-item.visited .nav-label { color: var(--text-dim); }
+  .nav-line {
+    width: 1px; height: 16px; background: var(--text-muted);
+    margin-left: 6.5px; opacity: 0.4;
+  }
+
+  /* ═══════ Slides container ═══════ */
+  .slides-container {
+    position: fixed; top: 0; left: 200px; right: 0; bottom: 0;
+    overflow: hidden;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.5s;
+    padding: 60px 60px 60px 40px;
+    z-index: 1;
+    cursor: pointer;
+  }
+  .slide.active { opacity: 1; visibility: visible; z-index: 10; }
+
+  .slide-inner {
+    width: 100%; max-width: 1000px;
+    display: flex; flex-direction: column; align-items: center; gap: 24px;
+    pointer-events: none; /* Let clicks pass through to slide for navigation */
+  }
+  .slide-inner > * { pointer-events: auto; } /* Re-enable for interactive children */
+
+  /* ═══════ Typography ═══════ */
+  .slide-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 300; line-height: 1.15;
+    text-align: center; letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .slide-title em { font-style: italic; font-weight: 600; color: var(--slide-accent); }
+
+  .section-label {
+    font-family: 'Fira Code', monospace; font-size: 11px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--slide-accent);
+  }
+
+  .subhead {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(14px, 1.4vw, 18px); font-weight: 400;
+    color: var(--text-dim); text-align: center;
+    line-height: 1.6; max-width: 560px;
+  }
+
+  .mono-text {
+    font-family: 'Fira Code', monospace;
+    font-size: clamp(10px, 0.9vw, 13px);
+  }
+
+  .hairline { width: 60px; height: 1px; background: var(--border); opacity: 0.5; }
+
+  /* ═══════ Animation ═══════ */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .slide.active .anim-1 { animation: fadeInUp 0.6s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .slide.active .anim-2 { animation: fadeInUp 0.6s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .slide.active .anim-3 { animation: fadeInUp 0.6s 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .slide.active .anim-4 { animation: fadeInUp 0.6s 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+  /* Step items for interactive reveals */
+  .step-item { transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+  .step-item.dimmed { opacity: 0.04; }
+  .step-item.highlighted { opacity: 1; }
+  .step-item.soft { opacity: 0.15; }
+
+  /* ═══════ Components ═══════ */
+
+  /* Recap cards */
+  .recap-grid {
+    display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 16px;
+  }
+  .recap-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .recap-card {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 20px 16px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg-subtle);
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    width: 190px; text-align: center;
+  }
+  .recap-card.dimmed { opacity: 0.04; border-color: transparent; }
+  .recap-card.highlighted { opacity: 1; border-color: color-mix(in srgb, var(--slide-accent) 30%, var(--border)); }
+  .recap-card.soft { opacity: 0.12; border-color: transparent; }
+  .recap-card .recap-title {
+    font-family: 'Fraunces', serif; font-size: 16px;
+    font-weight: 400; line-height: 1.3; color: var(--slide-accent);
+  }
+  .recap-card .recap-sub {
+    font-family: 'Fira Code', monospace; font-size: 9px;
+    color: var(--text-dim); letter-spacing: 0.04em;
+  }
+
+  /* Navigation buttons */
+  .nav-btns {
+    position: fixed; bottom: 32px; right: 48px;
+    display: flex; gap: 8px; z-index: 100;
+  }
+  .nav-btn {
+    width: 40px; height: 40px; border-radius: 8px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    color: var(--text-dim); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+  }
+  .nav-btn:hover {
+    color: var(--text); border-color: var(--slide-accent);
+    background: var(--bg-subtle);
+  }
+  .nav-btn:disabled {
+    opacity: 0.3; cursor: not-allowed;
+  }
+
+  /* Hint footer */
+  .hint-footer {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    font-family: 'Fira Code', monospace; font-size: 10px;
+    color: var(--text-muted); letter-spacing: 0.08em;
+    z-index: 100;
+  }
+
+  /* SVG text styles */
+  svg text { font-family: 'Plus Jakarta Sans', sans-serif; }
+  svg .mono-text { font-family: 'Fira Code', monospace; }
+  svg .serif-text { font-family: 'Fraunces', serif; }
+
+  /* Per-slide accent */
+  .slide[data-accent="1"] { --slide-accent: var(--accent-1); }
+  .slide[data-accent="2"] { --slide-accent: var(--accent-2); }
+  .slide[data-accent="3"] { --slide-accent: var(--accent-3); }
+  .slide[data-accent="4"] { --slide-accent: var(--accent-4); }
+  .slide[data-accent="5"] { --slide-accent: var(--accent-5); }
+
+  /* ═══════ Mobile responsive ═══════ */
+  @media (max-width: 768px) {
+    .chapter-nav { left: 16px; }
+    .nav-label { display: none; }
+    .slides-container { left: 60px; }
+    .slide { padding: 40px 24px; }
+    .slide-counter { right: 24px; top: 24px; font-size: 11px; }
+    .slide-counter .watermark { display: none; }
+    .nav-btns { right: 24px; bottom: 24px; }
+    .recap-row { flex-direction: column; align-items: center; }
+    .recap-card { width: 100%; max-width: 280px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════ Slide Counter + Watermark ═══════ -->
+<div class="slide-counter" id="slideCounter">
+  <span class="current">1</span> / <span class="total">12</span>
+  <span class="watermark">| Khai Hoan | Nghien AI</span>
+</div>
+
+<!-- ═══════ Chapter Navigation ═══════ -->
+<nav class="chapter-nav" id="chapterNav">
+  <!-- Nav items injected by JS -->
+</nav>
+
+<!-- ═══════ Slides ═══════ -->
+<div class="slides-container" id="slidesContainer">
+
+  <!-- ═══ Slide 1 — Title ═══ -->
+  <div class="slide active" data-chapter="0" data-accent="1">
+    <div class="slide-inner">
+      <div class="section-label anim-1">Chapter 01</div>
+      <h1 class="slide-title anim-2">Three forces — <em>all at once</em></h1>
+      <div class="hairline anim-3"></div>
+      <p class="subhead anim-4">A presentation template with watermark, click navigation, and chapter sidebar.</p>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 2 — Content ═══ -->
+  <div class="slide" data-chapter="0" data-accent="1">
+    <div class="slide-inner">
+      <div class="section-label anim-1" style="color: var(--accent-1);">The Landscape</div>
+      <h1 class="slide-title anim-2">What we're <em>talking about</em></h1>
+      <div class="hairline anim-3"></div>
+      <p class="subhead anim-4">This slide demonstrates the content layout with staggered animations.</p>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 3 — Section Break ═══ -->
+  <div class="slide" data-chapter="1" data-accent="2">
+    <div class="slide-inner">
+      <div class="section-label anim-1">Chapter 02</div>
+      <h1 class="slide-title anim-2">Four <em>unlocks</em></h1>
+      <div class="hairline anim-3"></div>
+      <svg viewBox="0 0 740 180" width="740" height="180" class="anim-4">
+        <text x="90" y="55" fill="var(--accent-2)" font-size="42" class="serif-text" font-weight="200" text-anchor="middle">1</text>
+        <text x="90" y="82" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Files Are</text>
+        <text x="90" y="100" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">the Input</text>
+        <line x1="170" y1="30" x2="170" y2="110" stroke="var(--border)" stroke-width="1"></line>
+        <text x="280" y="55" fill="var(--accent-2)" font-size="42" class="serif-text" font-weight="200" text-anchor="middle">2</text>
+        <text x="280" y="82" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Compounding</text>
+        <text x="280" y="100" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Memory</text>
+        <line x1="370" y1="30" x2="370" y2="110" stroke="var(--border)" stroke-width="1"></line>
+        <text x="460" y="55" fill="var(--accent-2)" font-size="42" class="serif-text" font-weight="200" text-anchor="middle">3</text>
+        <text x="460" y="82" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Multi-System</text>
+        <text x="460" y="100" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Workflows</text>
+        <line x1="560" y1="30" x2="560" y2="110" stroke="var(--border)" stroke-width="1"></line>
+        <text x="650" y="55" fill="var(--accent-2)" font-size="42" class="serif-text" font-weight="200" text-anchor="middle">4</text>
+        <text x="650" y="82" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Orchestrated</text>
+        <text x="650" y="100" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Skills</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 4 — Content with SVG ═══ -->
+  <div class="slide" data-chapter="1" data-accent="2">
+    <div class="slide-inner">
+      <div class="section-label anim-1" style="color: var(--accent-2);">Unlock 01</div>
+      <h1 class="slide-title anim-2" style="font-size: 36px;">Your files are <em>the input</em></h1>
+      <svg viewBox="0 0 820 200" width="820" height="200" class="anim-3">
+        <!-- Chat side -->
+        <text x="166" y="30" fill="var(--text-dim)" font-size="12" class="mono-text" text-anchor="middle">CHAT</text>
+        <rect x="120" y="50" width="92" height="60" rx="4" fill="none" stroke="var(--border)" stroke-width="1"></rect>
+        <text x="166" y="85" fill="var(--text-dim)" font-size="10" class="mono-text" text-anchor="middle">1-10 files</text>
+        <text x="166" y="130" fill="var(--text-muted)" font-size="10" class="mono-text" text-anchor="middle">upload · copy · repeat</text>
+
+        <!-- Divider -->
+        <line x1="400" y1="20" x2="400" y2="160" stroke="var(--border)" stroke-width="1"></line>
+
+        <!-- Agent side -->
+        <text x="620" y="30" fill="var(--accent-2)" font-size="12" class="mono-text" text-anchor="middle">AGENT</text>
+        <rect x="560" y="50" width="120" height="60" rx="4" fill="none" stroke="var(--accent-2)" stroke-width="1"></rect>
+        <text x="620" y="85" fill="var(--accent-2)" font-size="10" class="mono-text" text-anchor="middle">150+ files</text>
+        <text x="620" y="130" fill="var(--text-dim)" font-size="10" class="mono-text" text-anchor="middle">direct access</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 5 — Decision Grid ═══ -->
+  <div class="slide" data-chapter="2" data-accent="3">
+    <div class="slide-inner">
+      <div class="section-label anim-1" style="color: var(--accent-3);">Chapter 03</div>
+      <svg viewBox="0 0 820 340" width="820" height="340" class="anim-2">
+        <text x="200" y="28" fill="var(--text-dim)" font-size="13" class="serif-text" text-anchor="middle" font-weight="400" opacity="0.6">Stay in chat</text>
+        <line x1="60" y1="42" x2="340" y2="42" stroke="var(--border)" stroke-width="0.5"></line>
+
+        <!-- Left boxes -->
+        <g class="step-item" data-decision="0">
+          <rect x="60" y="54" width="280" height="44" rx="5" fill="var(--bg-subtle)" stroke="var(--border)" stroke-width="0.6"></rect>
+          <text x="88" y="82" fill="var(--accent-3)" font-size="18" class="serif-text" font-weight="200" dominant-baseline="central">01</text>
+          <text x="120" y="76" fill="var(--text)" font-size="13" font-weight="500" dominant-baseline="central">Conversational / iterating</text>
+        </g>
+        <g class="step-item" data-decision="1">
+          <rect x="60" y="106" width="280" height="44" rx="5" fill="var(--bg-subtle)" stroke="var(--border)" stroke-width="0.6"></rect>
+          <text x="88" y="128" fill="var(--accent-3)" font-size="18" class="serif-text" font-weight="200" dominant-baseline="central">02</text>
+          <text x="120" y="128" fill="var(--text)" font-size="13" font-weight="500" dominant-baseline="central">Everything fits in the window</text>
+        </g>
+        <g class="step-item" data-decision="2">
+          <rect x="60" y="158" width="280" height="44" rx="5" fill="var(--bg-subtle)" stroke="var(--border)" stroke-width="0.6"></rect>
+          <text x="88" y="180" fill="var(--accent-3)" font-size="18" class="serif-text" font-weight="200" dominant-baseline="central">03</text>
+          <text x="120" y="180" fill="var(--text)" font-size="13" font-weight="500" dominant-baseline="central">One-off task</text>
+        </g>
+
+        <line x1="410" y1="20" x2="410" y2="220" stroke="var(--border)" stroke-width="1"></line>
+
+        <text x="610" y="28" fill="var(--accent-3)" font-size="13" class="serif-text" text-anchor="middle" font-weight="600" font-style="italic">Switch to agent</text>
+        <line x1="470" y1="42" x2="750" y2="42" stroke="var(--border)" stroke-width="0.5"></line>
+
+        <g class="step-item" data-decision="3">
+          <rect x="470" y="54" width="280" height="66" rx="5" fill="var(--bg-subtle)" stroke="var(--accent-3)" stroke-width="0.8"></rect>
+          <text x="498" y="88" fill="var(--accent-3)" font-size="26" class="serif-text" font-weight="200" dominant-baseline="central">10+</text>
+          <text x="546" y="82" fill="var(--text)" font-size="13" font-weight="500">files or 100s of pages</text>
+          <text x="546" y="102" fill="var(--text-dim)" font-size="10" class="mono-text">volume exceeds the chat window</text>
+        </g>
+        <g class="step-item" data-decision="4">
+          <rect x="470" y="132" width="280" height="66" rx="5" fill="var(--bg-subtle)" stroke="var(--accent-3)" stroke-width="0.8"></rect>
+          <text x="498" y="166" fill="var(--accent-3)" font-size="26" class="serif-text" font-weight="200" dominant-baseline="central">3+</text>
+          <text x="534" y="160" fill="var(--text)" font-size="13" font-weight="500">systems involved</text>
+          <text x="534" y="180" fill="var(--text-dim)" font-size="10" class="mono-text">repeated + multi-system execution</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 6 — Recap ═══ -->
+  <div class="slide" data-chapter="4" data-accent="4">
+    <div class="slide-inner">
+      <div class="section-label anim-1" style="color: var(--accent-4);">Chapter 04</div>
+      <h1 class="slide-title anim-2" style="font-size: 40px;">Your <em>first session</em></h1>
+      <svg viewBox="0 0 780 240" width="780" height="240" class="anim-3">
+        <circle cx="100" cy="80" r="28" fill="none" stroke="var(--accent-4)" stroke-width="1.5"></circle>
+        <text x="100" y="87" fill="var(--accent-4)" font-size="22" class="serif-text" text-anchor="middle" font-weight="300">1</text>
+        <text x="100" y="128" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Open the tab</text>
+        <text x="100" y="148" fill="var(--text-dim)" font-size="11" text-anchor="middle" class="mono-text">Cowork / Codex</text>
+        <line x1="132" y1="80" x2="218" y2="80" stroke="var(--accent-4)" stroke-width="0.5" opacity="0.4"></line>
+
+        <circle cx="250" cy="80" r="28" fill="none" stroke="var(--accent-4)" stroke-width="1.5"></circle>
+        <text x="250" y="87" fill="var(--accent-4)" font-size="22" class="serif-text" text-anchor="middle" font-weight="300">2</text>
+        <text x="250" y="128" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Pick a folder</text>
+        <text x="250" y="148" fill="var(--text-dim)" font-size="11" text-anchor="middle" class="mono-text">copy files — sandbox</text>
+        <line x1="282" y1="80" x2="368" y2="80" stroke="var(--accent-4)" stroke-width="0.5" opacity="0.4"></line>
+
+        <circle cx="400" cy="80" r="28" fill="none" stroke="var(--accent-4)" stroke-width="1.5"></circle>
+        <text x="400" y="87" fill="var(--accent-4)" font-size="22" class="serif-text" text-anchor="middle" font-weight="300">3</text>
+        <text x="400" y="128" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Give it a task</text>
+        <text x="400" y="148" fill="var(--text-dim)" font-size="11" text-anchor="middle" class="mono-text">plain English</text>
+        <line x1="432" y1="80" x2="518" y2="80" stroke="var(--accent-4)" stroke-width="0.5" opacity="0.4"></line>
+
+        <circle cx="550" cy="80" r="28" fill="none" stroke="var(--accent-4)" stroke-width="1.5"></circle>
+        <text x="550" y="87" fill="var(--accent-4)" font-size="22" class="serif-text" text-anchor="middle" font-weight="300">4</text>
+        <text x="550" y="128" fill="var(--text)" font-size="14" text-anchor="middle" font-weight="500">Watch</text>
+        <text x="550" y="148" fill="var(--text-dim)" font-size="11" text-anchor="middle" class="mono-text">work appears in folder</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 7 — Final Recap Cards ═══ -->
+  <div class="slide" data-chapter="5" data-accent="5">
+    <div class="slide-inner">
+      <div class="section-label anim-1" style="color: var(--accent-5);">Recap</div>
+      <div class="recap-grid anim-2">
+        <div class="recap-row">
+          <div class="recap-card">
+            <svg viewBox="0 0 60 50" width="56" height="46">
+              <line x1="8" y1="10" x2="36" y2="25" stroke="var(--accent-5)" stroke-width="1.2" opacity="0.7"></line>
+              <line x1="8" y1="25" x2="36" y2="25" stroke="var(--accent-5)" stroke-width="1.2" opacity="0.7"></line>
+              <line x1="8" y1="40" x2="36" y2="25" stroke="var(--accent-5)" stroke-width="1.2" opacity="0.7"></line>
+              <circle cx="36" cy="25" r="4" fill="var(--accent-5)"></circle>
+              <line x1="42" y1="25" x2="56" y2="25" stroke="var(--accent-5)" stroke-width="1.2"></line>
+              <polygon points="54,22 58,25 54,28" fill="var(--accent-5)"></polygon>
+            </svg>
+            <div class="recap-title">Three forces converged</div>
+            <div class="recap-sub">better ui · better ai · politics</div>
+          </div>
+          <div class="recap-card">
+            <svg viewBox="0 0 60 50" width="56" height="46">
+              <rect x="4" y="14" width="10" height="24" rx="2" fill="var(--accent-5)" opacity="0.15" stroke="var(--accent-5)" stroke-width="0.8"></rect>
+              <rect x="18" y="9" width="10" height="29" rx="2" fill="var(--accent-5)" opacity="0.25" stroke="var(--accent-5)" stroke-width="0.8"></rect>
+              <rect x="32" y="4" width="10" height="34" rx="2" fill="var(--accent-5)" opacity="0.4" stroke="var(--accent-5)" stroke-width="0.8"></rect>
+              <rect x="46" y="0" width="10" height="38" rx="2" fill="var(--accent-5)" opacity="0.6" stroke="var(--accent-5)" stroke-width="0.8"></rect>
+            </svg>
+            <div class="recap-title">Four agent unlocks</div>
+            <div class="recap-sub">files · memory · systems · skills</div>
+          </div>
+          <div class="recap-card">
+            <svg viewBox="0 0 60 50" width="56" height="46">
+              <line x1="6" y1="25" x2="54" y2="25" stroke="var(--accent-5)" stroke-width="1.5" opacity="0.5"></line>
+              <circle cx="6" cy="25" r="4" fill="none" stroke="var(--accent-5)" stroke-width="1"></circle>
+              <circle cx="54" cy="25" r="4" fill="var(--accent-5)"></circle>
+              <polygon points="36,22 42,25 36,28" fill="var(--accent-5)" opacity="0.5"></polygon>
+            </svg>
+            <div class="recap-title">Tasks graduate naturally</div>
+            <div class="recap-sub">chat → agent over time</div>
+          </div>
+        </div>
+        <div class="recap-row">
+          <div class="recap-card">
+            <svg viewBox="0 0 60 50" width="56" height="46">
+              <rect x="6" y="10" width="48" height="30" rx="4" fill="none" stroke="var(--accent-5)" stroke-width="1"></rect>
+              <rect x="6" y="10" width="48" height="10" rx="4" fill="var(--accent-5)" opacity="0.1"></rect>
+            </svg>
+            <div class="recap-title">Already in your app</div>
+            <div class="recap-sub">open the other tab</div>
+          </div>
+          <div class="recap-card">
+            <svg viewBox="0 0 60 50" width="56" height="46">
+              <rect x="10" y="8" width="40" height="32" rx="4" fill="var(--accent-5)" opacity="0.08" stroke="var(--accent-5)" stroke-width="1"></rect>
+            </svg>
+            <div class="recap-title">One folder. One task.</div>
+            <div class="recap-sub">start this week</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════ Navigation Buttons ═══════ -->
+<div class="nav-btns">
+  <button class="nav-btn" id="prevBtn" aria-label="Previous slide">←</button>
+  <button class="nav-btn" id="nextBtn" aria-label="Next slide">→</button>
+</div>
+
+<!-- ═══════ Hint Footer ═══════ -->
+<div class="hint-footer">Click slide or use ← → to navigate</div>
+
+<script>
+(function() {
+  // ═══════ Configuration ═══════
+  const chapters = [
+    { name: 'Why Now', color: '#C7956D', slides: [0, 1] },
+    { name: 'What\'s Different', color: '#6AADA7', slides: [2, 3] },
+    { name: 'When to Use', color: '#B87A8A', slides: [4] },
+    { name: 'Your First Time', color: '#8AAB72', slides: [5] },
+    { name: 'Recap', color: '#C7B88A', slides: [6] }
+  ];
+
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentSlide = 0;
+
+  // ═══════ Build Navigation ═══════
+  const nav = document.getElementById('chapterNav');
+
+  chapters.forEach((ch, i) => {
+    if (i > 0) {
+      const line = document.createElement('div');
+      line.className = 'nav-line';
+      nav.appendChild(line);
+    }
+
+    const item = document.createElement('div');
+    item.className = 'nav-item';
+    item.dataset.chapter = i;
+    item.style.setProperty('--accent', ch.color);
+    item.innerHTML = `
+      <div class="nav-dot-wrap"><div class="nav-dot"></div></div>
+      <div class="nav-label">${ch.name}</div>
+    `;
+    item.addEventListener('click', () => goToSlide(ch.slides[0]));
+    nav.appendChild(item);
+  });
+
+  // ═══════ Navigation Functions ═══════
+  function updateNav() {
+    const cc = parseInt(slides[currentSlide].dataset.chapter);
+    document.querySelectorAll('.nav-item').forEach(item => {
+      const ch = parseInt(item.dataset.chapter);
+      item.classList.remove('active', 'visited');
+      if (ch === cc) item.classList.add('active');
+      else if (ch < cc) item.classList.add('visited');
+    });
+  }
+
+  function updateCounter() {
+    const current = String(currentSlide + 1);
+    const total = String(totalSlides);
+    document.getElementById('slideCounter').innerHTML = `
+      <span class="current">${current}</span> / <span class="total">${total}</span>
+      <span class="watermark">| Khai Hoan | Nghien AI</span>
+    `;
+  }
+
+  function updateSlideAccent() {
+    const accent = slides[currentSlide].dataset.accent || '1';
+    document.documentElement.style.setProperty('--slide-accent', `var(--accent-${accent})`);
+  }
+
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = index;
+    slides[currentSlide].classList.add('active');
+    updateNav();
+    updateCounter();
+    updateSlideAccent();
+
+    // Update button states
+    document.getElementById('prevBtn').disabled = currentSlide === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+  }
+
+  // ═══════ Event Listeners ═══════
+
+  // Click on slide to navigate next
+  slides.forEach(slide => {
+    slide.addEventListener('click', (e) => {
+      // Don't navigate if clicking on interactive elements
+      if (e.target.closest('a, button, input, textarea, [contenteditable]')) return;
+      goToSlide(currentSlide + 1);
+    });
+  });
+
+  // Navigation buttons
+  document.getElementById('nextBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    goToSlide(currentSlide + 1);
+  });
+
+  document.getElementById('prevBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    goToSlide(currentSlide - 1);
+  });
+
+  // Keyboard navigation
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      goToSlide(currentSlide - 1);
+    }
+  });
+
+  // ═══════ Initialize ═══════
+  slides[0].classList.add('active');
+  updateNav();
+  updateCounter();
+  updateSlideAccent();
+  document.getElementById('prevBtn').disabled = true;
+})();
+</script>
+
+</body>
+</html>

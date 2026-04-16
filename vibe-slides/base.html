@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibe Slides — Base Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,300;0,400;1,400&family=Figtree:wght@300;400;500;600&family=Azeret+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ═══════ Design tokens ═══════ */
+  :root {
+    --bg: #0B0B0F;
+    --bg-raised: #131318;
+    --bg-surface: #1A1A21;
+    --text: #E8E2D8;
+    --text-dim: #7A7580;
+    --text-muted: #4A4650;
+    --border: #2A2830;
+    --accent-1: #C4956A;
+    --accent-2: #6AABB5;
+    --accent-3: #8DAA7E;
+    --accent-4: #B87D7D;
+    --accent-5: #9B8AC4;
+    --nav-width: 220px;
+    --slide-accent: var(--accent-1);
+  }
+  :root[data-theme="light"] {
+    --bg: #FAF7F0;
+    --bg-raised: #F2EDE2;
+    --bg-surface: #E8E2D2;
+    --text: #1A1A1F;
+    --text-dim: #5A5560;
+    --text-muted: #8A8590;
+    --border: #D4CEBE;
+    --accent-1: #8B5A2B;
+    --accent-2: #2E7A85;
+    --accent-3: #4A7A3B;
+    --accent-4: #8B3D3D;
+    --accent-5: #5B4A84;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: 'Figtree', sans-serif; font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  /* Noise overlay */
+  body::after {
+    content: ''; position: fixed; inset: 0;
+    opacity: 0.025; pointer-events: none; z-index: 9999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat; background-size: 200px 200px;
+  }
+  :root[data-theme="light"] body::after { opacity: 0.04; mix-blend-mode: multiply; }
+
+  /* ═══════ Theme toggle ═══════ */
+  .theme-toggle {
+    position: fixed; top: 24px; right: 40px; z-index: 200;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg-raised); border: 1px solid var(--border);
+    color: var(--text-dim); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s ease;
+  }
+  .theme-toggle:hover { color: var(--text); border-color: var(--slide-accent); }
+
+  /* ═══════ Sidebar Variant A: Dot-line nav (default) ═══════ */
+  .chapter-nav {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: var(--nav-width); display: flex; flex-direction: column;
+    justify-content: center; padding: 40px 0 40px 24px; z-index: 100;
+  }
+  .nav-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
+  .nav-line-progress {
+    position: absolute; top: 0; width: 1px; height: 0;
+    background: var(--slide-accent);
+    transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.6s ease;
+    z-index: 1;
+  }
+  .nav-item { position: relative; padding: 10px 0 10px 28px; cursor: pointer; }
+  .nav-dot {
+    position: absolute; left: 7.5px; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-muted);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2;
+  }
+  .nav-item.active .nav-dot {
+    background: var(--slide-accent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--slide-accent) 40%, transparent);
+    width: 9px; height: 9px;
+  }
+  .nav-item.visited .nav-dot { background: var(--slide-accent); }
+  .nav-label {
+    font-family: 'Figtree', sans-serif; font-size: 11px; font-weight: 400;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--text-muted); transition: color 0.3s ease; line-height: 1.3;
+  }
+  .nav-item.active .nav-label { color: var(--text); font-weight: 500; }
+  .nav-item.visited .nav-label { color: var(--text-dim); }
+  .nav-item:hover .nav-label { color: var(--text-dim); }
+
+  /* ═══════ Slide counter ═══════ */
+  .slide-counter {
+    position: fixed; top: 32px; right: 90px;
+    font-family: 'Azeret Mono', monospace; font-size: 13px; font-weight: 300;
+    color: var(--text-muted); z-index: 100; letter-spacing: 0.05em;
+  }
+  .slide-counter .current-num { color: var(--text-dim); }
+
+  /* ═══════ Slides container ═══════ */
+  .slides-container {
+    position: fixed; top: 0; left: var(--nav-width); right: 0; bottom: 0; overflow: hidden;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 60px 80px;
+    /* Transition 1 — Fade-up (default) */
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+  .slide.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+  /* Staggered children reveal (Transition 3 — add class="anim anim-1/2/3" to any child) */
+  .slide .anim { opacity: 0; transform: translateY(12px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .slide.active .anim { opacity: 1; transform: translateY(0); }
+  .slide.active .anim-1 { transition-delay: 0.15s; }
+  .slide.active .anim-2 { transition-delay: 0.30s; }
+  .slide.active .anim-3 { transition-delay: 0.45s; }
+  .slide.active .anim-4 { transition-delay: 0.60s; }
+
+  .slide-inner {
+    width: 100%; max-width: 1000px;
+    display: flex; flex-direction: column; align-items: center; gap: 32px;
+  }
+
+  /* Per-slide accent */
+  .slide[data-accent="1"] { --slide-accent: var(--accent-1); }
+  .slide[data-accent="2"] { --slide-accent: var(--accent-2); }
+  .slide[data-accent="3"] { --slide-accent: var(--accent-3); }
+  .slide[data-accent="4"] { --slide-accent: var(--accent-4); }
+  .slide[data-accent="5"] { --slide-accent: var(--accent-5); }
+
+  /* ═══════ Typography ═══════ */
+  .section-num {
+    font-family: 'Newsreader', serif; font-size: 13px; font-weight: 400;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--slide-accent); opacity: 0.8;
+  }
+  .slide-title {
+    font-family: 'Newsreader', serif; font-weight: 400; font-size: 52px;
+    line-height: 1.15; text-align: center; color: var(--text); letter-spacing: -0.01em;
+  }
+  .slide-title em { font-style: italic; color: var(--slide-accent); }
+  .slide-subtitle {
+    font-family: 'Figtree', sans-serif; font-size: 18px; font-weight: 300;
+    color: var(--text-dim); text-align: center; max-width: 600px; line-height: 1.6;
+  }
+
+  /* ═══════ Components ═══════ */
+
+  /* Prompt block */
+  .prompt-block {
+    width: 100%; max-width: 780px;
+    background: var(--bg-raised); border: 1px solid var(--border); border-radius: 10px;
+    padding: 32px 36px;
+    font-family: 'Azeret Mono', monospace; font-size: 14.5px; line-height: 1.9;
+    color: var(--text-dim); text-align: left; position: relative;
+  }
+  .prompt-block::before {
+    content: 'PROMPT'; position: absolute; top: -9px; left: 24px;
+    font-family: 'Azeret Mono', monospace; font-size: 9px; font-weight: 500;
+    letter-spacing: 0.15em; color: var(--text-muted); background: var(--bg-raised); padding: 0 8px;
+  }
+  .prompt-block .hl { color: var(--slide-accent); }
+
+  /* File tree */
+  .file-tree {
+    font-family: 'Azeret Mono', monospace; font-size: 17px; font-weight: 400;
+    line-height: 2.2; color: var(--text-dim); text-align: left; padding: 32px 0;
+  }
+  .file-tree .highlight { color: var(--slide-accent); font-weight: 500; }
+  .file-tree .dim { color: var(--text-muted); }
+  .file-tree .hint { color: var(--text-muted); font-size: 13px; }
+
+  /* Dual column */
+  .dual-column { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%; max-width: 800px; }
+  .col-card {
+    border: 1px solid var(--border); border-radius: 10px; padding: 32px 28px;
+    background: var(--bg-raised); display: flex; flex-direction: column; gap: 16px;
+  }
+  .col-card.accent-border { border-color: color-mix(in srgb, var(--slide-accent) 40%, var(--border)); }
+  .col-title { font-family: 'Figtree', sans-serif; font-size: 20px; font-weight: 600; color: var(--text); }
+  .col-body { font-family: 'Figtree', sans-serif; font-size: 15px; font-weight: 300; color: var(--text-dim); line-height: 1.7; }
+  .col-tag {
+    font-family: 'Azeret Mono', monospace; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.12em; padding: 4px 10px; border-radius: 4px;
+    display: inline-block; width: fit-content;
+    color: var(--slide-accent); background: color-mix(in srgb, var(--slide-accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--slide-accent) 20%, transparent);
+  }
+
+  /* Formula row */
+  .formula-row { display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; }
+  .formula-pill {
+    font-family: 'Figtree', sans-serif; font-size: 16px; font-weight: 500; color: var(--text-dim);
+    padding: 10px 24px; border: 1px solid var(--border); border-radius: 50px; background: var(--bg-raised);
+  }
+  .formula-op { font-family: 'Newsreader', serif; font-size: 28px; font-style: italic; color: var(--text-muted); }
+  .formula-result {
+    font-family: 'Figtree', sans-serif; font-size: 16px; font-weight: 600; color: var(--slide-accent);
+    padding: 10px 24px; border: 1.5px solid var(--slide-accent); border-radius: 50px;
+    background: color-mix(in srgb, var(--slide-accent) 6%, transparent);
+  }
+
+  /* Context bar */
+  .context-visual { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 12px; }
+  .context-bar { height: 40px; border-radius: 6px; display: flex; overflow: hidden; border: 1px solid var(--border); }
+  .context-fill {
+    height: 100%; display: flex; align-items: center; justify-content: center;
+    font-family: 'Azeret Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .context-fill.filled {
+    background: color-mix(in srgb, var(--slide-accent) 20%, var(--bg-raised));
+    color: var(--slide-accent); border-right: 1px solid var(--border);
+  }
+  .context-fill.remaining { background: var(--bg-raised); color: var(--text-muted); flex: 1; }
+  .context-label {
+    display: flex; justify-content: space-between;
+    font-family: 'Azeret Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em;
+  }
+
+  /* Three answers */
+  .three-answers { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 660px; }
+  .answer-row { display: grid; grid-template-columns: 40px 1fr; gap: 16px; align-items: center; }
+  .answer-num { font-family: 'Newsreader', serif; font-size: 28px; font-weight: 300; color: var(--slide-accent); text-align: center; }
+  .answer-text { font-family: 'Figtree', sans-serif; font-size: 16px; color: var(--text); line-height: 1.5; }
+
+  /* Hint footer */
+  .hint-footer {
+    position: fixed; bottom: 24px; right: 40px; z-index: 100;
+    font-family: 'Azeret Mono', monospace; font-size: 10px;
+    color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">◐</button>
+
+<nav class="chapter-nav" id="chapterNav">
+  <div class="nav-line" id="navLine"></div>
+  <div class="nav-line-progress" id="navProgress"></div>
+  <!-- nav items injected by JS -->
+</nav>
+
+<div class="slide-counter">
+  <span class="current-num" id="currentSlide">01</span><span> / </span><span id="totalSlides">06</span>
+</div>
+
+<div class="slides-container">
+
+  <!-- ═══ Slide 0 — Title ═══ -->
+  <div class="slide active" data-chapter="0" data-accent="1">
+    <div class="slide-inner">
+      <div class="section-num anim anim-1">Vibe Slides</div>
+      <div class="slide-title anim anim-2">Build Decks. <em>Vibe Code.</em></div>
+      <div class="slide-subtitle anim anim-3">Single-file HTML deck template. Dark &amp; light theme. Keyboard nav. Editorial design language inspired by D-Squared.</div>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 1 — Mental model ═══ -->
+  <div class="slide" data-chapter="1" data-accent="2">
+    <div class="slide-inner">
+      <div class="section-num">The Idea</div>
+      <div class="slide-title">One File. <em>Infinite Decks.</em></div>
+      <div class="formula-row">
+        <div class="formula-pill anim anim-1">HTML</div>
+        <div class="formula-op">+</div>
+        <div class="formula-pill anim anim-2">CSS</div>
+        <div class="formula-op">+</div>
+        <div class="formula-pill anim anim-3">JS</div>
+        <div class="formula-op">→</div>
+        <div class="formula-result anim anim-4">A Deck You Own</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 2 — File tree ═══ -->
+  <div class="slide" data-chapter="2" data-accent="3">
+    <div class="slide-inner">
+      <div class="section-num">Anatomy</div>
+      <div class="slide-title">What Lives <em>Inside</em></div>
+      <div class="file-tree">
+        <div>vibe-slides/</div>
+        <div>├── <span class="highlight">SKILL.md</span>         <span class="dim">← rules + design tokens</span></div>
+        <div>├── <span class="highlight">base.html</span>        <span class="dim">← this file, copy me</span></div>
+        <div>└── <span class="dim">examples/</span>         <span class="hint">(future decks)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 3 — Context bar ═══ -->
+  <div class="slide" data-chapter="3" data-accent="4">
+    <div class="slide-inner">
+      <div class="section-num">Visual Sample</div>
+      <div class="slide-title">Fill. <em>Remaining.</em></div>
+      <div class="context-visual">
+        <div class="context-bar">
+          <div class="context-fill filled" style="width: 65%;">Built</div>
+          <div class="context-fill remaining">To go</div>
+        </div>
+        <div class="context-label">
+          <span>Components shipped →</span>
+          <span>← Components ahead</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 4 — Dual column ═══ -->
+  <div class="slide" data-chapter="4" data-accent="5">
+    <div class="slide-inner">
+      <div class="section-num">Themes</div>
+      <div class="slide-title">Dark. <em>Or Light.</em></div>
+      <div class="dual-column">
+        <div class="col-card anim anim-1">
+          <div class="col-tag">DEFAULT</div>
+          <div class="col-title">Dark</div>
+          <div class="col-body">Warm gold on charcoal. Editorial, focus mode. Best for stage, dim rooms, long sessions.</div>
+        </div>
+        <div class="col-card accent-border anim anim-2">
+          <div class="col-tag">TOGGLE</div>
+          <div class="col-title">Light</div>
+          <div class="col-body">Deeper gold on cream. Paper-like, print-ready. Best for daytime, docs, handouts.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Slide 5 — Close / how to use ═══ -->
+  <div class="slide" data-chapter="5" data-accent="1">
+    <div class="slide-inner">
+      <div class="section-num">Start</div>
+      <div class="slide-title">Copy. Edit. <em>Ship.</em></div>
+      <div class="three-answers">
+        <div class="answer-row anim anim-1">
+          <div class="answer-num">1</div>
+          <div class="answer-text">Copy <code style="font-family:'Azeret Mono',monospace;color:var(--slide-accent)">base.html</code> → rename by date + slug.</div>
+        </div>
+        <div class="answer-row anim anim-2">
+          <div class="answer-num">2</div>
+          <div class="answer-text">Edit chapters array in JS + add/remove <code style="font-family:'Azeret Mono',monospace;color:var(--slide-accent)">&lt;div class="slide"&gt;</code> blocks.</div>
+        </div>
+        <div class="answer-row anim anim-3">
+          <div class="answer-num">3</div>
+          <div class="answer-text">Pick accent per slide via <code style="font-family:'Azeret Mono',monospace;color:var(--slide-accent)">data-accent="1-5"</code>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="hint-footer">← → to navigate · ◐ to toggle theme</div>
+
+<script>
+(function() {
+  // ═══════ Config: edit chapters here ═══════
+  const chapters = [
+    { name: 'Title',      slides: [0] },
+    { name: 'The Idea',   slides: [1] },
+    { name: 'Anatomy',    slides: [2] },
+    { name: 'Visual',     slides: [3] },
+    { name: 'Themes',     slides: [4] },
+    { name: 'Start',      slides: [5] }
+  ];
+
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentIndex = 0;
+  const nav = document.getElementById('chapterNav');
+  const navProgress = document.getElementById('navProgress');
+  const navLine = document.getElementById('navLine');
+
+  // Inject nav items
+  chapters.forEach((ch, i) => {
+    const item = document.createElement('div');
+    item.className = 'nav-item';
+    item.dataset.chapter = i;
+    item.innerHTML = '<div class="nav-dot"></div><div class="nav-label">' + ch.name + '</div>';
+    item.addEventListener('click', () => goToSlide(ch.slides[0]));
+    nav.appendChild(item);
+  });
+
+  // Align nav line to dot center
+  requestAnimationFrame(() => {
+    const firstDot = nav.querySelector('.nav-dot');
+    if (firstDot) {
+      const navRect = nav.getBoundingClientRect();
+      const dotRect = firstDot.getBoundingClientRect();
+      const cx = dotRect.left + dotRect.width / 2 - navRect.left;
+      navLine.style.left = cx + 'px';
+      navProgress.style.left = cx + 'px';
+    }
+    updateUI();
+  });
+
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides) return;
+    slides[currentIndex].classList.remove('active');
+    currentIndex = index;
+    slides[currentIndex].classList.add('active');
+    updateUI();
+  }
+
+  function updateUI() {
+    document.getElementById('currentSlide').textContent = String(currentIndex + 1).padStart(2, '0');
+    document.getElementById('totalSlides').textContent = String(totalSlides).padStart(2, '0');
+
+    const ch = parseInt(slides[currentIndex].dataset.chapter);
+    const a = slides[currentIndex].dataset.accent;
+    document.documentElement.style.setProperty('--slide-accent', 'var(--accent-' + a + ')');
+
+    const items = nav.querySelectorAll('.nav-item');
+    items.forEach((item, i) => {
+      item.classList.remove('active', 'visited');
+      if (i === ch) item.classList.add('active');
+      else if (i < ch) item.classList.add('visited');
+    });
+    if (items.length > 0 && !isNaN(ch)) {
+      const active = items[ch];
+      const nr = nav.getBoundingClientRect();
+      const ir = active.getBoundingClientRect();
+      navProgress.style.height = (ir.top - nr.top + ir.height / 2) + 'px';
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault(); goToSlide(currentIndex + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault(); goToSlide(currentIndex - 1);
+    }
+  });
+
+  // Theme toggle
+  let currentTheme = 'dark';
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+  });
+})();
+</script>
+
+</body>
+</html>
